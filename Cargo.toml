@@ -1,7 +1,7 @@
 [package]
 name = "Rust"
 version = "0.1.0"
-authors = ["Benjamin Spector <benjaminfspector@gmail.com>"]
+authors = ["Pavel Kolevatyh <pavel.kolevatyh@gmail.com>"]
 
 publish = false
 vcs = "None"
@@ -11,8 +11,8 @@ rand = "*"
 text_io = "*"
 
 [[bin]]
-path = "src/MyBot.rs"
-name = "MyBot"
+path = "src/SmartBot.rs"
+name = "SmartBot"
 
 [[bin]]
 path = "src/RandomBot.rs"
