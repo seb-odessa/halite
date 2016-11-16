@@ -1,11 +1,11 @@
 <component name="libraryTable">
   <library name="Rust &lt;halite&gt;">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../rust-1.10.0-src.zip!/rust-1.10.0/src/libstd" />
-      <root url="jar://$PROJECT_DIR$/../rust-1.10.0-src.zip!/rust-1.10.0/src/libcore" />
-      <root url="jar://$PROJECT_DIR$/../rust-1.10.0-src.zip!/rust-1.10.0/src/libcollections" />
-      <root url="jar://$PROJECT_DIR$/../rust-1.10.0-src.zip!/rust-1.10.0/src/liballoc" />
-      <root url="jar://$PROJECT_DIR$/../rust-1.10.0-src.zip!/rust-1.10.0/src/librustc_unicode" />
+      <root url="file://$USER_HOME$/.multirust/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src/libstd" />
+      <root url="file://$USER_HOME$/.multirust/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src/libcore" />
+      <root url="file://$USER_HOME$/.multirust/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src/libcollections" />
+      <root url="file://$USER_HOME$/.multirust/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src/liballoc" />
+      <root url="file://$USER_HOME$/.multirust/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/src/librustc_unicode" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

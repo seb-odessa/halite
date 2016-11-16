@@ -9,10 +9,11 @@ vcs = "None"
 [dependencies]
 rand = "*"
 text_io = "*"
+lazy_static = "0.1.*"
 
 [[bin]]
 path = "src/SmartBot.rs"
-name = "SmartBot"
+name = "smart_bot"
 
 [[bin]]
 path = "src/RandomBot.rs"

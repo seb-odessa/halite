@@ -1,53 +1,85 @@
-//#![allow(non_snake_case)]
-#![allow(warnings)]
-extern crate rand;
+#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate text_io;
 
 mod hlt;
 use hlt::{ networking, types };
-use hlt::types::{Site, Location, GameMap};
+use hlt::types::*;
 use std::collections::HashMap;
-use rand::Rng;
 
 fn main() {
-    let (id, mut game_map) = networking::get_init();
+    let (id, map) = networking::get_init();
+    let mut bot = SmartBot::new(id, map, "Smart Bot");
+    networking::send_init(bot.get_init());
 
-    networking::send_init(format!("{}{}", "Smart Bot".to_string(), id.to_string()));
     loop {
-        networking::get_frame(&mut game_map);
+        networking::get_frame(&mut bot.get_map());
+        networking::send_frame(bot.get_moves());
+    }
+}
+
+struct SmartBot {
+    id: u8,
+    map: GameMap,
+    name: String,
+}
+impl SmartBot {
+    pub fn new<T: Into<String>>(id: u8, map: GameMap, name: T) -> Self {
+        SmartBot {id: id, map: map, name: name.into()}
+    }
+
+    pub fn get_init(&self) -> String {
+        format!("{} {}", &self.name, &self.id)
+    }
+
+    pub fn get_map<'a>(&'a mut self) -> &'a mut GameMap {
+        &mut self.map
+    }
+
+    pub fn get_moves(&self) -> HashMap<Location, u8> {
         let mut moves = HashMap::new();
-        for y in 0..game_map.height {
-            for x in 0..game_map.width {
+        for y in 0..self.map.height {
+            for x in 0..self.map.width {
                 let l = Location { x: x, y: y };
-                if let Some(mv) = get_move(id, l, &game_map) {
+                if let Some(mv) = self.calculate_moves(l) {
                     moves.insert(l, mv);
                 }
             }
         }
-        networking::send_frame(moves);
+        return moves;
     }
+
+    fn site(&self, l: Location, dir: u8) -> Site {
+        self.map.get_site_ref(l, dir).clone()
+    }
+
+    fn calculate_moves(&self, l: Location) -> Option<u8> {
+        let site = self.site(l, types::STILL);
+        if site.owner == self.id {
+            let mut weights: Vec<(i32, u8)> = CARDINALS.iter().map(|d|{
+                let target = self.site(l, *d);
+                let delta = site.strength as i32 - target.strength as i32;
+                if site.owner != target.owner {
+                    (delta, *d)
+                } else{
+                    if target.strength > 16 && site.strength > target.strength {
+                        (delta, *d)
+                    } else if site.strength > 200 && target.strength > 5 && site.strength > target.strength {
+                        (-delta, *d)
+                    } else {
+                        (0, STILL)
+                    }
+                }
+
+
+            }).collect();
+            weights.sort_by(|a, b| a.0.cmp(&b.0));
+            if let Some(best) = weights.last() {
+                return Some(best.1);
+            }
+
+        }
+        return None;
+    }
+
 }
 
-fn is_good(current: &Site, possible: &Site) -> bool {
-    return possible.owner != current.owner && current.strength > possible.strength;
-}
-
-fn get_move(id: u8, l: Location, map: &GameMap) -> Option<u8> {
-    let site = map.get_site_ref(l, types::STILL);
-    if site.owner == id {
-        if is_good(&site, &map.get_site_ref(l, types::NORTH)) {
-            return Some(types::NORTH);
-        }
-        if is_good(&site, &map.get_site_ref(l, types::SOUTH)) {
-            return Some(types::SOUTH);
-        }
-        if is_good(&site, &map.get_site_ref(l, types::WEST)) {
-            return Some(types::WEST);
-        }
-        if is_good(&site, &map.get_site_ref(l, types::EAST)) {
-            return Some(types::EAST);
-        }
-        return Some(types::STILL);
-    }
-    None
-}
