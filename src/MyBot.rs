@@ -1,15 +1,14 @@
-extern crate rand;
 #[macro_use] extern crate text_io;
 
 mod hlt;
 use hlt::{ networking, types };
 use hlt::types::*;
 use std::collections::HashMap;
-use rand::Rng;
+
 
 fn main() {
     let (id, map) = networking::get_init();
-    let mut bot = SmartBot::new(id, map, "Smart v2 Bot");
+    let mut bot = SmartBot::new(id, map, "Smart v3 Bot");
     networking::send_init(bot.get_init());
 
     loop {
@@ -22,11 +21,10 @@ struct SmartBot {
     id: u8,
     map: GameMap,
     name: String,
-    rng: rand::ThreadRng,
 }
 impl SmartBot {
     pub fn new<T: Into<String>>(id: u8, map: GameMap, name: T) -> Self {
-        SmartBot {id: id, map: map, name: name.into(), rng: rand::thread_rng()}
+        SmartBot {id: id, map: map, name: name.into()}
     }
 
     pub fn get_init(&self) -> String {
@@ -54,6 +52,29 @@ impl SmartBot {
         self.map.get_site_ref(l, dir).clone()
     }
 
+    fn steps(&mut self, l: Location, dir: u8) -> u16 {
+        let mut cnt = 0;
+        let curr = self.map.get_site_ref(l, STILL).owner;
+        let mut loc = self.map.get_location(l, dir);
+        while curr == self.map.get_site_ref(loc, STILL).owner {
+            cnt += 1;
+            loc = self.map.get_location(loc, dir);
+            if cnt > self.map.height || cnt > self.map.width {
+                break;
+            }
+        }
+        return cnt;
+    }
+
+    fn find_nearest(&mut self, l: Location) -> u8 {
+        let mut weights: Vec<(u16, u8)> = CARDINALS.iter().map(|d|{ (self.steps(l, *d), *d) }).collect();
+        weights.sort_by(|a, b| a.0.cmp(&b.0));
+        if let Some(best) = weights.first() {
+            return best.1;
+        }
+        return STILL;
+    }
+
     fn calculate_moves(&mut self, l: Location) -> Option<u8> {
         let site = self.site(l, types::STILL);
         if site.owner == self.id {
@@ -63,18 +84,10 @@ impl SmartBot {
                 if site.owner != target.owner {
                     (delta, *d)
                 } else {
-                    if site.strength > 200 {
-                        if self.map.width/2 > l.x && self.map.height/2 > l.y {
-                            (0, if self.rng.gen::<u8>() % 2 > 0 {WEST} else {NORTH})
-                        } else if self.map.width/2 > l.x && self.map.height/2 < l.y {
-                            (0, if self.rng.gen::<u8>() % 2 > 0 {WEST} else {SOUTH})
-                        } else if self.map.width/2 < l.x && self.map.height/2 > l.y {
-                            (0, if self.rng.gen::<u8>() % 2 > 0 {EAST} else {NORTH})
-                        } else {
-                            (0, if self.rng.gen::<u8>() % 2 > 0 {EAST} else {SOUTH})
-                        }
-                    } else if site.strength > 70 {
-                        (0, self.rng.gen::<u8>() % 5)
+                    if site.strength > 16 && target.strength > 8 {
+                        (delta, *d)
+                    } else if site.strength > 64 {
+                        (0, self.find_nearest(l))
                     } else {
                         (0, STILL)
                     }
@@ -84,7 +97,6 @@ impl SmartBot {
             if let Some(best) = weights.last() {
                 return Some(best.1);
             }
-
         }
         return None;
     }
