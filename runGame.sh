@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cargo build
-./halite -d "30 30" "target/debug/smart_bot" "target/debug/RandomBot"
+cargo build --release
+./halite -d "30 30" "target/release/smart_bot" "target/release/s1bot"

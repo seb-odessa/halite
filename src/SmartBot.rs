@@ -1,4 +1,3 @@
-#[macro_use] extern crate lazy_static;
 #[macro_use] extern crate text_io;
 
 mod hlt;
@@ -8,7 +7,7 @@ use std::collections::HashMap;
 
 fn main() {
     let (id, map) = networking::get_init();
-    let mut bot = SmartBot::new(id, map, "Smart Bot");
+    let mut bot = SmartBot::new(id, map, "Smart v2 Bot");
     networking::send_init(bot.get_init());
 
     loop {
@@ -55,22 +54,20 @@ impl SmartBot {
     fn calculate_moves(&self, l: Location) -> Option<u8> {
         let site = self.site(l, types::STILL);
         if site.owner == self.id {
-            let mut weights: Vec<(i32, u8)> = CARDINALS.iter().map(|d|{
+            let mut weights: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
                 let target = self.site(l, *d);
-                let delta = site.strength as i32 - target.strength as i32;
+                let delta = site.strength as i16 - target.strength as i16;
                 if site.owner != target.owner {
                     (delta, *d)
-                } else{
-                    if target.strength > 16 && site.strength > target.strength {
+                } else {
+                    if site.strength < 10 {
+                        (0, STILL)
+                    } else if target.strength > 16 && site.strength/4 > target.strength {
                         (delta, *d)
-                    } else if site.strength > 200 && target.strength > 5 && site.strength > target.strength {
-                        (-delta, *d)
                     } else {
                         (0, STILL)
                     }
                 }
-
-
             }).collect();
             weights.sort_by(|a, b| a.0.cmp(&b.0));
             if let Some(best) = weights.last() {
