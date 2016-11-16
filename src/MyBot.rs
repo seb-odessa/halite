@@ -1,9 +1,11 @@
+extern crate rand;
 #[macro_use] extern crate text_io;
 
 mod hlt;
 use hlt::{ networking, types };
 use hlt::types::*;
 use std::collections::HashMap;
+use rand::Rng;
 
 fn main() {
     let (id, map) = networking::get_init();
@@ -20,10 +22,11 @@ struct SmartBot {
     id: u8,
     map: GameMap,
     name: String,
+    rng: rand::ThreadRng,
 }
 impl SmartBot {
     pub fn new<T: Into<String>>(id: u8, map: GameMap, name: T) -> Self {
-        SmartBot {id: id, map: map, name: name.into()}
+        SmartBot {id: id, map: map, name: name.into(), rng: rand::thread_rng()}
     }
 
     pub fn get_init(&self) -> String {
@@ -34,7 +37,7 @@ impl SmartBot {
         &mut self.map
     }
 
-    pub fn get_moves(&self) -> HashMap<Location, u8> {
+    pub fn get_moves(&mut self) -> HashMap<Location, u8> {
         let mut moves = HashMap::new();
         for y in 0..self.map.height {
             for x in 0..self.map.width {
@@ -51,7 +54,7 @@ impl SmartBot {
         self.map.get_site_ref(l, dir).clone()
     }
 
-    fn calculate_moves(&self, l: Location) -> Option<u8> {
+    fn calculate_moves(&mut self, l: Location) -> Option<u8> {
         let site = self.site(l, types::STILL);
         if site.owner == self.id {
             let mut weights: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
@@ -60,10 +63,18 @@ impl SmartBot {
                 if site.owner != target.owner {
                     (delta, *d)
                 } else {
-                    if site.strength < 10 {
-                        (0, STILL)
-                    } else if target.strength > 16 && site.strength/4 > target.strength {
-                        (delta, *d)
+                    if site.strength > 200 {
+                        if self.map.width/2 > l.x && self.map.height/2 > l.y {
+                            (0, if self.rng.gen::<u8>() % 2 > 0 {WEST} else {NORTH})
+                        } else if self.map.width/2 > l.x && self.map.height/2 < l.y {
+                            (0, if self.rng.gen::<u8>() % 2 > 0 {WEST} else {SOUTH})
+                        } else if self.map.width/2 < l.x && self.map.height/2 > l.y {
+                            (0, if self.rng.gen::<u8>() % 2 > 0 {EAST} else {NORTH})
+                        } else {
+                            (0, if self.rng.gen::<u8>() % 2 > 0 {EAST} else {SOUTH})
+                        }
+                    } else if site.strength > 70 {
+                        (0, self.rng.gen::<u8>() % 5)
                     } else {
                         (0, STILL)
                     }
