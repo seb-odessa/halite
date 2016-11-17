@@ -1,4 +1,6 @@
 #!/bin/bash
 
-cargo build
-~/bin/halite -d "30 30" "target/debug/MyBot" "target/debug/MyBotV3" "target/debug/MyBotV4"
+TARGET=release
+
+cargo build --release
+~/bin/halite -d "40 40" "target/release/MyBot" "target/release/MyBotV6" "target/release/MyBotV5"

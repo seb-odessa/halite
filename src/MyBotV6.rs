@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 fn main() {
     let (id, map) = networking::get_init();
-    let mut bot = SmartBot::new(id, map, "Smart v7 Bot");
+    let mut bot = SmartBot::new(id, map, "Smart v6 Bot");
     networking::send_init(bot.get_init());
 
     loop {
@@ -87,16 +87,11 @@ impl SmartBot {
                 if site.owner != target.owner {
                     (delta, *d)
                 } else {
-                    if site.strength > 8 && site.strength < 16 && target.strength > 24 && target.strength < 200{
+                    if site.strength > 8 && site.strength < 16 && target.strength > 24 {
                         (0, *d)
                     } else if site.strength > 16 {
                         let mv = self.find_nearest(l);
-                        let target = self.site(l, mv);
-                        if target.owner == site.owner && site.strength + target.strength < 255 {
-                            (1, mv)
-                        } else {
-                            (0, STILL)
-                        }
+                        (0, if self.site(l, mv).owner == site.owner {mv} else {STILL})
                     } else {
                         (0, STILL)
                     }

@@ -1,6 +1,6 @@
 [root]
 name = "Rust"
-version = "0.1.0"
+version = "0.7.0"
 dependencies = [
  "rand 0.3.14 (registry+https://github.com/rust-lang/crates.io-index)",
  "text_io 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -1,10 +1,7 @@
 [package]
 name = "Rust"
-version = "0.1.0"
+version = "0.7.0"
 authors = ["Pavel Kolevatyh <pavel.kolevatyh@gmail.com>"]
-
-publish = false
-vcs = "None"
 
 [dependencies]
 rand = "*"
@@ -15,14 +12,9 @@ path = "src/MyBot.rs"
 name = "MyBot"
 
 [[bin]]
-path = "src/MyBotV2.rs"
-name = "MyBotV2"
+path = "src/MyBotV5.rs"
+name = "MyBotV5"
 
 [[bin]]
-path = "src/MyBotV3.rs"
-name = "MyBotV3"
-
-[[bin]]
-path = "src/MyBotV4.rs"
-name = "MyBotV4"
-
+path = "src/MyBotV6.rs"
+name = "MyBotV6"
