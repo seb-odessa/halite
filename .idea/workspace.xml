@@ -1,14 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="c72c0a1c-f682-4357-b115-cf469a90f375" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/libraries/Cargo__halite_.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Cargo__halite_.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Cargo.lock" afterPath="$PROJECT_DIR$/Cargo.lock" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Cargo.toml" afterPath="$PROJECT_DIR$/Cargo.toml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/runGame.sh" afterPath="$PROJECT_DIR$/runGame.sh" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/SmartBot.rs" afterPath="$PROJECT_DIR$/src/SmartBot.rs" />
-    </list>
+    <list default="true" id="c72c0a1c-f682-4357-b115-cf469a90f375" name="Default" comment="" />
     <ignored path="halite.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
