@@ -1,8 +1,8 @@
 <component name="libraryTable">
   <library name="Cargo &lt;halite&gt;">
     <CLASSES>
-      <root url="file://$USER_HOME$/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.3.14" />
       <root url="file://$USER_HOME$/.cargo/registry/src/github.com-1ecc6299db9ec823/libc-0.2.17" />
+      <root url="file://$USER_HOME$/.cargo/registry/src/github.com-1ecc6299db9ec823/rand-0.3.14" />
       <root url="file://$USER_HOME$/.cargo/registry/src/github.com-1ecc6299db9ec823/text_io-0.1.5" />
     </CLASSES>
     <JAVADOC />

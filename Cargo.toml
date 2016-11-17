@@ -11,9 +11,18 @@ rand = "*"
 text_io = "*"
 
 [[bin]]
-path = "src/SmartBot.rs"
-name = "smart_bot"
+path = "src/MyBot.rs"
+name = "MyBot"
 
 [[bin]]
-path = "src/RandomBot.rs"
-name = "RandomBot"
+path = "src/MyBotV2.rs"
+name = "MyBotV2"
+
+[[bin]]
+path = "src/MyBotV3.rs"
+name = "MyBotV3"
+
+[[bin]]
+path = "src/MyBotV4.rs"
+name = "MyBotV4"
+

@@ -1,3 +1,6 @@
+#![allow(non_snake_case)]
+#![allow(warnings)]
+
 #[macro_use] extern crate text_io;
 
 mod hlt;
@@ -5,9 +8,10 @@ use hlt::{ networking, types };
 use hlt::types::*;
 use std::collections::HashMap;
 
+
 fn main() {
     let (id, map) = networking::get_init();
-    let mut bot = SmartBot::new(id, map, "Smart v2 Bot");
+    let mut bot = SmartBot::new(id, map, "Smart v4 Bot");
     networking::send_init(bot.get_init());
 
     loop {
@@ -34,7 +38,7 @@ impl SmartBot {
         &mut self.map
     }
 
-    pub fn get_moves(&self) -> HashMap<Location, u8> {
+    pub fn get_moves(&mut self) -> HashMap<Location, u8> {
         let mut moves = HashMap::new();
         for y in 0..self.map.height {
             for x in 0..self.map.width {
@@ -51,7 +55,30 @@ impl SmartBot {
         self.map.get_site_ref(l, dir).clone()
     }
 
-    fn calculate_moves(&self, l: Location) -> Option<u8> {
+    fn steps(&mut self, l: Location, dir: u8) -> u16 {
+        let mut cnt = 0;
+        let curr = self.map.get_site_ref(l, STILL).owner;
+        let mut loc = self.map.get_location(l, dir);
+        while curr == self.map.get_site_ref(loc, STILL).owner {
+            cnt += 1;
+            loc = self.map.get_location(loc, dir);
+            if cnt > self.map.height || cnt > self.map.width {
+                break;
+            }
+        }
+        return cnt;
+    }
+
+    fn find_nearest(&mut self, l: Location) -> u8 {
+        let mut weights: Vec<(u16, u8)> = CARDINALS.iter().map(|d|{ (self.steps(l, *d), *d) }).collect();
+        weights.sort_by(|a, b| a.0.cmp(&b.0));
+        if let Some(best) = weights.first() {
+            return best.1;
+        }
+        return STILL;
+    }
+
+    fn calculate_moves(&mut self, l: Location) -> Option<u8> {
         let site = self.site(l, types::STILL);
         if site.owner == self.id {
             let mut weights: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
@@ -60,10 +87,10 @@ impl SmartBot {
                 if site.owner != target.owner {
                     (delta, *d)
                 } else {
-                    if site.strength < 10 {
-                        (0, STILL)
-                    } else if target.strength > 16 && site.strength/4 > target.strength {
-                        (delta, *d)
+                    if site.strength > 16 && target.strength > 8 {
+                        (0, *d)
+                    } else if site.strength > 64 {
+                        (0, self.find_nearest(l))
                     } else {
                         (0, STILL)
                     }
@@ -73,7 +100,6 @@ impl SmartBot {
             if let Some(best) = weights.last() {
                 return Some(best.1);
             }
-
         }
         return None;
     }
