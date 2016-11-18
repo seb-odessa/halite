@@ -11,7 +11,7 @@ use std::collections::HashMap;
 
 fn main() {
     let (id, map) = networking::get_init();
-    let mut bot = SmartBot::new(id, map, "Smart v7 Bot");
+    let mut bot = SmartBot::new(id, map, "Smart v8 Bot");
     networking::send_init(bot.get_init());
 
     loop {
@@ -24,10 +24,19 @@ struct SmartBot {
     id: u8,
     map: GameMap,
     name: String,
+    weight: Vec<Vec<i16>>,
 }
 impl SmartBot {
     pub fn new<T: Into<String>>(id: u8, map: GameMap, name: T) -> Self {
-        SmartBot {id: id, map: map, name: name.into()}
+
+        let mut w: Vec<Vec<i16>> = Vec::with_capacity(map.height as usize);
+        for y in 0..map.height {
+            w.push(Vec::with_capacity(map.width as usize));
+            for x in 0..map.width {
+                w[y as usize].push(0);
+            }
+        }
+        SmartBot {id: id, map: map, name: name.into(), weight: w }
     }
 
     pub fn get_init(&self) -> String {
@@ -38,8 +47,29 @@ impl SmartBot {
         &mut self.map
     }
 
+    fn fill_weight(&mut self) {
+        for y in 0..self.map.height {
+            for x in 0..self.map.width {
+                let l = Location { x: x, y: y };
+                let site = self.map.get_site_ref(l, STILL);
+                if site.owner != self.id {
+                        self.weight[y as usize][x as usize] = site.strength as i16;
+                } else {
+                    self.weight[y as usize][x as usize] =
+                        (self.map.get_site_ref(l, WEST).strength as i16 +
+                            self.map.get_site_ref(l, NORTH).strength as i16) / 2;
+                }
+            }
+        }
+    }
+
+    fn weight(&self, l: Location) -> i16 {
+        self.weight[l.y as usize][l.x as usize]
+    }
+
     pub fn get_moves(&mut self) -> HashMap<Location, u8> {
         let mut moves = HashMap::new();
+        self.fill_weight();
         for y in 0..self.map.height {
             for x in 0..self.map.width {
                 let l = Location { x: x, y: y };
@@ -55,55 +85,33 @@ impl SmartBot {
         self.map.get_site_ref(l, dir).clone()
     }
 
-    fn steps(&mut self, l: Location, dir: u8) -> u16 {
-        let mut cnt = 0;
-        let curr = self.map.get_site_ref(l, STILL).owner;
-        let mut loc = self.map.get_location(l, dir);
-        while curr == self.map.get_site_ref(loc, STILL).owner {
-            cnt += 1;
-            loc = self.map.get_location(loc, dir);
-            if cnt > self.map.height || cnt > self.map.width {
-                break;
-            }
-        }
-        return cnt;
-    }
-
-    fn find_nearest(&mut self, l: Location) -> u8 {
-        let mut weights: Vec<(u16, u8)> = CARDINALS.iter().map(|d|{ (self.steps(l, *d), *d) }).collect();
-        weights.sort_by(|a, b| a.0.cmp(&b.0));
-        if let Some(best) = weights.first() {
-            return best.1;
-        }
-        return STILL;
-    }
 
     fn calculate_moves(&mut self, l: Location) -> Option<u8> {
         let site = self.site(l, types::STILL);
         if site.owner == self.id {
-            let mut weights: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
+            let mut moves: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
                 let target = self.site(l, *d);
                 let delta = site.strength as i16 - target.strength as i16;
                 if site.owner != target.owner {
-                    (delta, *d)
-                } else {
-                    if site.strength > 8 && site.strength < 16 && target.strength > 24 && target.strength < 200{
-                        (0, *d)
-                    } else if site.strength > 16 {
-                        let mv = self.find_nearest(l);
-                        let target = self.site(l, mv);
-                        if target.owner == site.owner && site.strength + target.strength < 255 {
-                            (1, mv)
-                        } else {
-                            (0, STILL)
-                        }
+                    if site.strength >= target.strength {
+                        (delta, *d)
                     } else {
                         (0, STILL)
                     }
+                } else {
+                    let weight = self.weight(l);
+                    if site.strength > 16 && site.strength < target.strength {
+                        (weight, *d)
+                    } else {
+                        (0, STILL)
+                    }
+
+
+
                 }
             }).collect();
-            weights.sort_by(|a, b| a.0.cmp(&b.0));
-            if let Some(best) = weights.last() {
+            moves.sort_by(|a, b| a.0.cmp(&b.0));
+            if let Some(best) = moves.last() {
                 return Some(best.1);
             }
         }
