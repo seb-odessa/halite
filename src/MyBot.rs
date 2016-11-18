@@ -88,30 +88,22 @@ impl SmartBot {
         self.map.get_site_ref(l, dir).clone()
     }
 
-
     fn calculate_moves(&mut self, l: Location) -> Option<u8> {
         let site = self.site(l, types::STILL);
         if site.owner == self.id {
             let mut moves: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
                 let target = self.site(l, *d);
                 let delta = site.strength as i16 - target.strength as i16;
-                if site.owner != target.owner {
-                    if site.strength >= target.strength {
-                        (delta, *d)
-                    } else {
-                        (0, STILL)
-                    }
+                if site.owner != target.owner && site.strength >= target.strength {
+                    (delta, *d)
+                } else if site.owner == target.owner && site.strength < target.strength {
+                    (self.get_weight(l), *d)
                 } else {
-                    let weight = self.get_weight(l);
-                    if site.strength > 16 && site.strength < target.strength {
-                        (-weight, *d)
-                    } else {
-                        (0, STILL)
-                    }
-
-
-
+                    (0, STILL)
                 }
+
+
+
             }).collect();
             moves.sort_by(|a, b| a.0.cmp(&b.0));
             if let Some(best) = moves.last() {
