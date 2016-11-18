@@ -48,22 +48,25 @@ impl SmartBot {
     }
 
     fn fill_weight(&mut self) {
+        let mut own = HashMap::new();
         for y in 0..self.map.height {
             for x in 0..self.map.width {
                 let l = Location { x: x, y: y };
-                let site = self.map.get_site_ref(l, STILL);
+                let site = self.map.get_site_ref(l, STILL).clone();
                 if site.owner != self.id {
-                        self.weight[y as usize][x as usize] = site.strength as i16;
+                    self.set_weight(l, site.strength as i16);
                 } else {
-                    self.weight[y as usize][x as usize] =
-                        (self.map.get_site_ref(l, WEST).strength as i16 +
-                            self.map.get_site_ref(l, NORTH).strength as i16) / 2;
+                    own.insert(l, 0);
                 }
             }
         }
     }
 
-    fn weight(&self, l: Location) -> i16 {
+    fn set_weight(&mut self, l: Location, weight: i16) {
+        self.weight[l.y as usize][l.x as usize] = weight;
+    }
+
+    fn get_weight(&self, l: Location) -> i16 {
         self.weight[l.y as usize][l.x as usize]
     }
 
@@ -99,9 +102,9 @@ impl SmartBot {
                         (0, STILL)
                     }
                 } else {
-                    let weight = self.weight(l);
+                    let weight = self.get_weight(l);
                     if site.strength > 16 && site.strength < target.strength {
-                        (weight, *d)
+                        (-weight, *d)
                     } else {
                         (0, STILL)
                     }
