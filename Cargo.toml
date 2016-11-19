@@ -1,6 +1,6 @@
 [package]
 name = "Rust"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["Pavel Kolevatyh <pavel.kolevatyh@gmail.com>"]
 
 [dependencies]
@@ -12,8 +12,8 @@ path = "src/MyBot.rs"
 name = "MyBot"
 
 [[bin]]
-path = "src/MyBotV5.rs"
-name = "MyBotV5"
+path = "src/MyBotV7.rs"
+name = "MyBotV7"
 
 [[bin]]
 path = "src/MyBotV6.rs"
