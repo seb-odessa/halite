@@ -107,7 +107,7 @@ impl SmartBot {
                 return Some(best.1);
             }
         }
-        return None;
+        return Some(STILL);
     }
 
 }
