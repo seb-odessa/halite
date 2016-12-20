@@ -11,7 +11,7 @@ use std::collections::HashSet;
 
 fn main() {
     let (id, map) = networking::get_init();
-    let mut bot = SmartBot::new(id, map, "Smart v10.2 Bot");
+    let mut bot = SmartBot::new(id, map, "Smart v11 Bot");
     networking::send_init(bot.get_init());
     loop {
         networking::get_frame(&mut bot.get_map());
@@ -36,6 +36,16 @@ impl SmartBot {
 
     pub fn get_map<'a>(&'a mut self) -> &'a mut GameMap {
         &mut self.map
+    }
+
+    fn negative(&self, mv: u8) -> u8 {
+        match mv {
+            WEST => EAST,
+            EAST => WEST,
+            NORTH => SOUTH,
+            SOUTH => NORTH,
+            _ => STILL
+        }
     }
 
     pub fn get_moves(&mut self) -> HashMap<Location, u8> {
@@ -65,7 +75,7 @@ impl SmartBot {
     }
 
     fn distance(&mut self, l: Location, d: u8) -> u16 {
-        let mut cnt = 0;
+        let mut cnt = 1;
         let mut loc = l;
         while self.id == self.site(loc, d).owner {
             cnt += 1;
@@ -78,20 +88,27 @@ impl SmartBot {
     }
 
     fn is_good(&self, site: &Site, target: &Site) -> bool {
-        (site.owner == target.owner) && (site.strength as i16 + target.strength as i16 <= 275)
+        (site.owner == target.owner) && (site.strength as i16 + target.strength as i16 <= 270)
     }
 
-    fn negative(&self, mv: u8) -> u8 {
-        match mv {
-            WEST => EAST,
-            EAST => WEST,
-            NORTH => SOUTH,
-            SOUTH => NORTH,
-            _ => STILL
+    fn best_relocation(&mut self, l: Location) -> Option<u8> {
+        let site = self.site(l, STILL);
+        if site.strength > 32 {
+            let mut weights: Vec<(u16, u8)> = CARDINALS.iter().map(|d|{
+                (self.distance(l, *d), *d)
+            }).collect();
+            weights.sort_by(|a, b| a.0.cmp(&b.0));
+            if let Some(tuple) = weights.first() {
+                let target = self.site(l, tuple.1);
+                if self.is_good(&site, &target)  {
+                    return Some(tuple.1);
+                }
+            }
         }
+        return None;
     }
 
-    fn try_attack(&mut self, l: Location) -> Option<u8> {
+    fn best_attack(&mut self, l: Location) -> Option<u8> {
         let site = self.site(l, STILL);
         let mut w: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
             let target = self.site(l, *d);
@@ -110,39 +127,21 @@ impl SmartBot {
         None
     }
 
-    fn try_relocate(&mut self, l: Location) -> Option<u8> {
+    fn best_improve(&mut self, l: Location) -> Option<u8> {
         let site = self.site(l, STILL);
-        if site.strength > 32 {
-            let mut weights: Vec<(u16, u8)> = CARDINALS.iter().map(|d|{
-                (self.distance(l, *d), *d)
-            }).collect();
-            weights.sort_by(|a, b| a.0.cmp(&b.0));
-            if let Some(tuple) = weights.first() {
-                let target = self.site(l, tuple.1);
-                if self.is_good(&site, &target) {
-                    return Some(tuple.1);
-                }
-            }
-        }
-        return None;
-    }
-
-    fn try_improve(&mut self, l: Location) -> Option<u8> {
-        let site = self.site(l, STILL);
-        if site.strength < 4 * site.production {
+        if site.strength < 6 * site.production {
             return None
         }
-        let mut weights: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
+        let mut w: Vec<(i16, u8)> = CARDINALS.iter().map(|d|{
             let target = self.site(l, *d);
-            let opposite = self.negative(*d);
-            if self.is_good(&site, &target) && self.site(l, opposite).owner == self.id {
-                (site.strength as i16 + target.strength as i16 - site.production as i16 + target.production as i16, *d)
+            if site.strength < target.strength && self.is_good(&site, &target) {
+                (site.strength as i16 + target.strength as i16, *d)
             } else {
-                (site.strength as i16 + site.production as i16, STILL)
+                (site.strength as i16, STILL)
             }
         }).collect();
-        weights.sort_by(|a, b| a.0.cmp(&b.0));
-        if let Some(tuple) = weights.last() {
+        w.sort_by(|a, b| a.0.cmp(&b.0));
+        if let Some(tuple) = w.last() {
             if STILL != tuple.1 {
                 return Some(tuple.1);
             }
@@ -153,13 +152,13 @@ impl SmartBot {
     fn calculate_moves(&mut self, l: Location) -> u8 {
         let site = self.site(l, STILL);
         if site.owner == self.id {
-            if let Some(attack) = self.try_attack(l) {
+            if let Some(attack) = self.best_attack(l) {
                 return attack;
             }
-            if let Some(relocation) = self.try_relocate(l) {
+            if let Some(relocation) = self.best_relocation(l) {
                 return relocation;
             }
-            if let Some(improvement) = self.try_improve(l) {
+            if let Some(improvement) = self.best_improve(l) {
                 return improvement;
             }
         }
